@@ -112,7 +112,8 @@ if __name__ == "__main__":
     
     s = input("Enter NYS plate numbers, separated by commas. Use * for unknowns:" ) # hx*459*,hxm4595,hvc2922, HAU8673
     
-    plates = s.split(',')
+    plates = s.replace(' ', '')
+    plates = plates.split(',')
     
     print(plates)
     
