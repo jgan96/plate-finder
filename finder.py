@@ -87,7 +87,7 @@ def partials(license):
         pos = license.find('*')
         partials(license[0:pos] + 'A' + license[pos:])
         # B-Z
-    elif license[3] == '*' or license[4] == '*' or license[5] == '*' or license[6] == '0':
+    elif license[3] == '*' or license[4] == '*' or license[5] == '*' or license[6] == '*':
         pos = license.find('*')
         partials(license[0:pos] + '0' + license[pos:])
         # 1-9
