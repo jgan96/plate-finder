@@ -44,7 +44,7 @@ def aggregateDf(viols):
     return aggregate
     
 def parseVehicle(d):
-    json_parsed = json.dumps(d['data'])
+    #json_parsed = json.dumps(d['data'])
     #print(json_parsed)
     #df = json_normalize(d['data', ['vehicle', 'violations']], errors='ignore')
     df = json_normalize(d['data'], errors='ignore')
@@ -84,7 +84,7 @@ def partials(license, df):
     # partials(HAC2**2)
     # partials(HAC20*2)
     # partials(HAC2002)
-    # query(HAC2002)
+    # return query(HAC2002)
     if license[0] == '*':
         df = pd.concat([df, partials('F' + license[1:], df)], ignore_index=True)
         df = pd.concat([df, partials('H' + license[1:], df)], ignore_index=True)
@@ -109,7 +109,6 @@ def partials(license, df):
 
 if __name__ == "__main__":
     hits = pd.DataFrame(columns=['plate', 'make', 'color', 'year', 'total violations', 'brooklyn', 'bronx', 'queens', 'staten island', 'manhattan', 'unknown'])
-    maybes = pd.DataFrame(columns=['plate', 'make', 'color', 'year', 'total violations', 'brooklyn', 'bronx', 'queens', 'staten island', 'manhattan', 'unknown'])
     
     s = input("Enter NYS plate numbers, separated by commas. Use * for unknowns:" ) # hx*459*,hxm4595,hvc2922, HAU8673
     
