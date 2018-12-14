@@ -1,5 +1,5 @@
 # https://api.howsmydrivingny.nyc/api/v1/?plate=
-# ie plate=NY:GCS8775
+# ie plate=NY:HVC2922
 
 # return df with plates with violations in each borough
 
@@ -76,30 +76,42 @@ def query(license):
 def partials(license, df):
     # https://en.wikipedia.org/wiki/Vehicle_registration_plates_of_New_York
     # first character can be F, H, J
-    # second and third character can be A-Z
+    # second and third character can be A-Z (but not I, O, Q?)
     # last four characters can be 0-9
     
+    # recursively iterate through possible matches, ie
+    # partials(H*C2**2)
+    # partials(HAC2**2)
+    # partials(HAC20*2)
+    # partials(HAC2002)
+    # query(HAC2002)
     if license[0] == '*':
-        partials('F' + license[1:], df)
-        # H, J
+        df = pd.concat([df, partials('F' + license[1:], df)], ignore_index=True)
+        df = pd.concat([df, partials('H' + license[1:], df)], ignore_index=True)
+        df = pd.concat([df, partials('J' + license[1:], df)], ignore_index=True)
     elif license[1] == '*' or license[2] == '*':
         pos = license.find('*')
-        partials(license[0:pos] + 'A' + license[pos:], df)
-        # B-Z
+        for i in range(ord('a'), ord('z')+1):
+            # A-Z but not I, O, Q
+            if ord('i') == i or ord('o') == i or ord('q') == i:
+                continue
+            else:
+                df = pd.concat([df, partials(license[0:pos] + chr(i) + license[pos + 1:], df)], ignore_index=True)
     elif license[3] == '*' or license[4] == '*' or license[5] == '*' or license[6] == '*':
         pos = license.find('*')
-        partials(license[0:pos] + '0' + license[pos:], df)
-        # 1-9
+        for i in range(0, 10):
+            # 0-9
+            df = pd.concat([df, partials(license[0:pos] + str(i) + license[pos + 1:], df)], ignore_index=True)
     else:
-        df = df.concat([df, query(license)], ignore_index=True)
-        return df
-        #return query(license)
+        print(license)
+        return query(license)
+    return df
 
 if __name__ == "__main__":
     hits = pd.DataFrame(columns=['plate', 'make', 'color', 'year', 'total violations', 'brooklyn', 'bronx', 'queens', 'staten island', 'manhattan', 'unknown'])
     maybes = pd.DataFrame(columns=['plate', 'make', 'color', 'year', 'total violations', 'brooklyn', 'bronx', 'queens', 'staten island', 'manhattan', 'unknown'])
     
-    s = input("Enter NYS plate numbers, separated by commas. Use * for unknowns:" ) # hxm4595,GCS8775, HAU8673
+    s = input("Enter NYS plate numbers, separated by commas. Use * for unknowns:" ) # hx*459*,hxm4595,hvc2922, HAU8673
     
     plates = s.split(',')
     
@@ -108,6 +120,11 @@ if __name__ == "__main__":
     # dont try plates with more than 4 missing characters, waste of time
     
     for p in plates:
-        hits = pd.concat([hits, query(p)], ignore_index=True)
+        if p.count('*') == 0:
+            hits = pd.concat([hits, query(p)], ignore_index=True)
+        elif p.count('*') > 0 and p.count('*') <= 4:
+            hits = pd.concat([hits, partials(p, hits)], ignore_index=True)
+        else:
+            print(p + " is missing too many characters!")
         print(hits)
     hits.to_csv('vehicles.csv')

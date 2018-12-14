@@ -1,3 +1,27 @@
-,plate,make,color,year,total violations,brooklyn,bronx,queens,staten island,manhattan,unknown
-0,HVC2922,NISSA,RED,2017,9,5,1,3,0,0,0
-1,HXM4595,VOLVO,BLUE,2008,10,8,0,0,0,2,0
+,bronx,brooklyn,color,make,manhattan,plate,queens,staten island,total violations,unknown,year
+0,0,0,TAN,ROVER,1,HAC2922,2,0,3,0,2015
+1,,,,Plate not found!,,HBC2922,,,,,
+2,0,1,GY,JEEP,0,HCC2922,1,0,2,0,0
+3,,,,Plate not found!,,HDC2922,,,,,
+4,,,,Plate not found!,,HEC2922,,,,,
+5,,,,Plate not found!,,HFC2922,,,,,
+6,,,,Plate not found!,,HGC2922,,,,,
+7,3,0,TN,BMW,0,HHC2922,0,0,3,0,2005.0
+8,,,,Plate not found!,,HIC2922,,,,,
+9,,,,Plate not found!,,HJC2922,,,,,
+10,,,,Plate not found!,,HKC2922,,,,,
+11,,,,Plate not found!,,HLC2922,,,,,
+12,11,3,GY,DODGE,0,HMC2922,0,0,14,0,2015
+13,,,,Plate not found!,,HNC2922,,,,,
+14,,,,Plate not found!,,HOC2922,,,,,
+15,,,,Plate not found!,,HPC2922,,,,,
+16,,,,Plate not found!,,HQC2922,,,,,
+17,1,0,GREY,HONDA,0,HRC2922,0,0,1,0,2014
+18,,,,Plate not found!,,HSC2922,,,,,
+19,,,,Plate not found!,,HTC2922,,,,,
+20,0,1,BK,CHEVR,0,HUC2922,0,0,1,0,2017
+21,1,5,RED,NISSA,0,HVC2922,3,0,9,0,2017
+22,,,,Plate not found!,,HWC2922,,,,,
+23,,,,Plate not found!,,HXC2922,,,,,
+24,,,,Plate not found!,,HYC2922,,,,,
+25,,,,Plate not found!,,HZC2922,,,,,
