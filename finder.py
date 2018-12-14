@@ -7,6 +7,10 @@ import pandas as pd
 import requests as r
 import json
 from pandas.io.json import json_normalize
+import time
+
+rateLimit = 26
+queries = 0
 
 def aggregateDf(viols):
     bk = 0
@@ -65,7 +69,16 @@ def parseVehicle(d):
         return pd.DataFrame(data=vehicledf)
 
 def query(license):
+    global queries
+    global rateLimit
     parameters = {"plate": "ny:" + license}
+    
+    if queries < rateLimit:
+        queries += 1
+    else:
+        time.sleep(3)
+        queries = 0
+        
     response = r.get("https://api.howsmydrivingny.nyc/api/v1/", params=parameters)
     data = response.json()
     print(response.status_code)
@@ -105,7 +118,13 @@ def partials(license, df):
     else:
         print(license)
         return query(license)
-    return df
+    
+    try:
+        df.to_csv('tmp.csv')
+    except PermissionError:
+        print("Permission error while writing to tmp.csv. Is the file open?")
+    finally:
+        return df
 
 if __name__ == "__main__":
     hits = pd.DataFrame(columns=['plate', 'make', 'color', 'year', 'total violations', 'brooklyn', 'bronx', 'queens', 'staten island', 'manhattan', 'unknown'])
@@ -128,3 +147,4 @@ if __name__ == "__main__":
             print(p + " is missing too many characters!")
         print(hits)
     hits.to_csv('vehicles.csv')
+    print("Search completed! Results in vehicles.csv.")
