@@ -73,30 +73,32 @@ def query(license):
     #print(data)
     return parseVehicle(data)
 
-def partials(license):
+def partials(license, df):
     # https://en.wikipedia.org/wiki/Vehicle_registration_plates_of_New_York
     # first character can be F, H, J
     # second and third character can be A-Z
     # last four characters can be 0-9
-    potentialHits = pd.DataFrame()
-    tryPlates = []
+    
     if license[0] == '*':
-        partials('F' + license[1:])
+        partials('F' + license[1:], df)
         # H, J
     elif license[1] == '*' or license[2] == '*':
         pos = license.find('*')
-        partials(license[0:pos] + 'A' + license[pos:])
+        partials(license[0:pos] + 'A' + license[pos:], df)
         # B-Z
     elif license[3] == '*' or license[4] == '*' or license[5] == '*' or license[6] == '*':
         pos = license.find('*')
-        partials(license[0:pos] + '0' + license[pos:])
+        partials(license[0:pos] + '0' + license[pos:], df)
         # 1-9
     else:
-        return query(license)
+        df = df.concat([df, query(license)], ignore_index=True)
+        return df
+        #return query(license)
 
 if __name__ == "__main__":
     hits = pd.DataFrame(columns=['plate', 'make', 'color', 'year', 'total violations', 'brooklyn', 'bronx', 'queens', 'staten island', 'manhattan', 'unknown'])
-
+    maybes = pd.DataFrame(columns=['plate', 'make', 'color', 'year', 'total violations', 'brooklyn', 'bronx', 'queens', 'staten island', 'manhattan', 'unknown'])
+    
     s = input("Enter NYS plate numbers, separated by commas. Use * for unknowns:" ) # hxm4595,GCS8775, HAU8673
     
     plates = s.split(',')
