@@ -38,8 +38,8 @@ def aggregateDf(viols):
             unk += 1
         
     total = bk + bx + qns + si + mhn + unk
-    vehicle = {'plate': [plate], 'make': [make], 'color': [color], 'year': year, 'total violations': total, 'brooklyn': bk, 'bronx': bx, 'queens': qns, 'staten island': si, 'manhattan': mhn, 'unknown': unk}
-    aggregate = pd.DataFrame(data=vehicle) #, columns=['plate', 'make', 'color', 'year', 'total', 'brooklyn', 'bronx', 'queens', 'staten island', 'manhattan', 'unknown'])    
+    vehicle = {'plate': [plate], 'make': make, 'color': color, 'year': year, 'total violations': total, 'brooklyn': bk, 'bronx': bx, 'queens': qns, 'staten island': si, 'manhattan': mhn, 'unknown': unk}
+    aggregate = pd.DataFrame(data=vehicle)   
     print(aggregate)
     return aggregate
     
@@ -51,9 +51,18 @@ def parseVehicle(d):
     #df = pd.read_json(json_parsed, orient="records")
     #print(df)
     #print(df["vehicle.violations"])
-    for v in df["vehicle.violations"]:
-        vehicledf = pd.read_json(json.dumps(v)) 
-    return aggregateDf(vehicledf) 
+    #print(df['vehicle.violations_count'])
+    
+    # check if plate is valid (if tickets exist)
+    if df['vehicle.violations_count'].all():
+        print("EXISTS")
+        for v in df["vehicle.violations"]:
+            vehicledf = pd.read_json(json.dumps(v))
+            return aggregateDf(vehicledf)         
+    else:
+        print("DNE")
+        vehicledf = {'plate': df['vehicle.plate'], 'make': "Plate not found!"}
+        return pd.DataFrame(data=vehicledf)
 
 def query(license):
     parameters = {"plate": license}
@@ -71,6 +80,11 @@ if __name__ == "__main__":
     
     s = input("Enter NYS plate numbers, separated by commas. Use * for unknowns:" ) # ny:hxm4595, NY:GCS8775
     
-    hits = pd.concat([hits, query(s)], ignore_index=True)
-    print(hits)
+    plates = s.split(',')
+    
+    print(plates)
+    
+    for p in plates:
+        hits = pd.concat([hits, query(p)], ignore_index=True)
+        print(hits)
     hits.to_csv('vehicles.csv')
