@@ -1,4 +1,2 @@
-,bronx,brooklyn,color,make,manhattan,plate,queens,staten island,total violations,unknown,year
-0,,,,Plate not found!,,HAU8673,,,,,
-1,0,8,BLUE,VOLVO,2,HXM4595,0,0,10,0,2008
-2,0,0,RD,NISSA,0,GCS8775,1,0,1,0,2012
+,plate,make,color,year,total violations,brooklyn,bronx,queens,staten island,manhattan,unknown
+0,HXM4595,VOLVO,BLUE,2008,10,8,0,0,0,2,0

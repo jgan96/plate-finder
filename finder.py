@@ -65,24 +65,45 @@ def parseVehicle(d):
         return pd.DataFrame(data=vehicledf)
 
 def query(license):
-    parameters = {"plate": license}
+    parameters = {"plate": "ny:" + license}
     response = r.get("https://api.howsmydrivingny.nyc/api/v1/", params=parameters)
     data = response.json()
     print(response.status_code)
     #print(response.content)
     #print(data)
-    return parseVehicle(data)    
+    return parseVehicle(data)
+
+def partials(license):
+    # https://en.wikipedia.org/wiki/Vehicle_registration_plates_of_New_York
+    # first character can be F, H, J
+    # second and third character can be A-Z
+    # last four characters can be 0-9
+    potentialHits = pd.DataFrame()
+    tryPlates = []
+    if license[0] == '*':
+        partials('F' + license[1:])
+        # H, J
+    elif license[1] == '*' or license[2] == '*':
+        pos = license.find('*')
+        partials(license[0:pos] + 'A' + license[pos:])
+        # B-Z
+    elif license[3] == '*' or license[4] == '*' or license[5] == '*' or license[6] == '0':
+        pos = license.find('*')
+        partials(license[0:pos] + '0' + license[pos:])
+        # 1-9
+    else:
+        return query(license)
 
 if __name__ == "__main__":
     hits = pd.DataFrame(columns=['plate', 'make', 'color', 'year', 'total violations', 'brooklyn', 'bronx', 'queens', 'staten island', 'manhattan', 'unknown'])
-    #query("NY:GCS8775")
-    #query("ny:hxm4595")
-    
-    s = input("Enter NYS plate numbers, separated by commas. Use * for unknowns:" ) # ny:hxm4595, NY:GCS8775
+
+    s = input("Enter NYS plate numbers, separated by commas. Use * for unknowns:" ) # hxm4595,GCS8775, HAU8673
     
     plates = s.split(',')
     
     print(plates)
+    
+    # dont try plates with more than 4 missing characters, waste of time
     
     for p in plates:
         hits = pd.concat([hits, query(p)], ignore_index=True)
