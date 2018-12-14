@@ -68,6 +68,9 @@ if __name__ == "__main__":
     hits = pd.DataFrame(columns=['plate', 'make', 'color', 'year', 'total violations', 'brooklyn', 'bronx', 'queens', 'staten island', 'manhattan', 'unknown'])
     #query("NY:GCS8775")
     #query("ny:hxm4595")
-    hits = pd.concat([hits, query("ny:hxm4595"), query("NY:GCS8775")], ignore_index=True)
+    
+    s = input("Enter NYS plate numbers, separated by commas. Use * for unknowns:" ) # ny:hxm4595, NY:GCS8775
+    
+    hits = pd.concat([hits, query(s)], ignore_index=True)
     print(hits)
     hits.to_csv('vehicles.csv')
