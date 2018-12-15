@@ -48,11 +48,7 @@ def aggregateDf(viols):
     return aggregate
     
 def parseVehicle(d):
-    #json_parsed = json.dumps(d['data'])
-    #print(json_parsed)
-    #df = json_normalize(d['data', ['vehicle', 'violations']], errors='ignore')
     df = json_normalize(d['data'], errors='ignore')
-    #df = pd.read_json(json_parsed, orient="records")
     #print(df)
     #print(df["vehicle.violations"])
     #print(df['vehicle.violations_count'])
