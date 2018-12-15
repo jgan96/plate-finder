@@ -146,5 +146,8 @@ if __name__ == "__main__":
         else:
             print(p + " is missing too many characters!")
         print(hits)
-    hits.to_csv('vehicles.csv')
+    try:
+        hits.to_csv('vehicles.csv')
+    except PermissionError:
+        print("Permission error while writing to vehicles.csv. Is the file open?")
     print("Search completed! Results in vehicles.csv.")
