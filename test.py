@@ -112,11 +112,11 @@ def getPartialsList(license): # where license is a list
     # last four characters can be 0-9
     
     # recursively iterate through possible matches, ie
-    # partials(H*C2**2)
-    # partials(HAC2**2)
-    # partials(HAC20*2)
-    # partials(HAC2002)
-    # return query(HAC2002)
+    # getPartialsList(H*C2**2)
+    # getPartialsList([HAC2**2, HBC2**2, ..., HZC2**2])
+    # getPartialsList([HAC20*2, HAC21*2, ..., HZC29*2])
+    # getPartialsList([HAC2002, HAC2012, ..., HZC2992])
+    # return [HAC2002, HAC2012, ..., HZC2992]
     
     global initials
     global letters
@@ -131,8 +131,6 @@ def getPartialsList(license): # where license is a list
     '''
 
     for p in license:
-        #print(p)
-        
         if p[0] == '*':
             #print("initials")
             #plateList.append()
@@ -144,27 +142,16 @@ def getPartialsList(license): # where license is a list
             #list = ["%s" + p[1:] % (i) for i in initials]      
             #partials(["%s" + p[1:] % (i) for i in initials])
         elif p[1] == '*' or p[2] == '*':
-            #print("letters")
             pos = p.find('*')
             for l in letters:
                 plateList.append(p[0:pos] + l + p[pos + 1:])
-                #print(plateList)
-            #print("end letters")
             plateList = getPartialsList(plateList)
-            #list = [p[0:pos] + "%s" + p[pos + 1:] % (l) for l in letters]
-            #partials([p[0:pos] + "%s" + p[pos + 1:] % (l) for l in letters])
         elif p[3] == '*' or p[4] == '*' or p[5] == '*' or p[6] == '*':
-            #print("numbers")
             pos = p.find('*')
             for n in numbers:
                 plateList.append(p[0:pos] + str(n) + p[pos + 1:])
-                #print(plateList)
-            #print("end numbers")
             plateList = getPartialsList(plateList)
-            #list = [p[0:pos] + "%s" + p[pos + 1:] % (n) for n in numbers]
-            #partials([p[0:pos] + "%s" + p[pos + 1:] % (str(n)) for n in numbers])
         else:
-            #print("appending...")
             plateList.append(p)
     print(plateList)
     return plateList
