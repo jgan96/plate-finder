@@ -4,11 +4,12 @@ from requests import get
 from requests.exceptions import RequestException
 from contextlib import closing
 from bs4 import BeautifulSoup
+from random import randint
 import pandas as pd
 import time
 import csv
 
-rateLimit = 5
+rateLimit = 15
 queries = 0
 initials = 'ABCDEFGHJ'
 letters = 'ABCDEFGHJKLMNPRSTUVWXYZ' # no i, o, q
@@ -63,10 +64,11 @@ def getVehicle(plate):
     global queries
     global rateLimit
     
-    if queries < rateLimit:
+    # use randint in rate limiting to allow for a more "human" approach
+    if queries < randint(1, rateLimit):
         queries += 1
     else:
-        time.sleep(3)
+        time.sleep(randint(1, 6))
         queries = 0
 
     if response is not None:
@@ -166,14 +168,6 @@ def getPartialsList(license): # where license is a list
     print(plateList)
     return plateList
 
-'''
-if __name__ == "__main__":
-    car = getVehicle('GCL8673')
-    print(car)
-    car = getVehicle('MCS8775')
-    print(car)
-'''
-    
 if __name__ == "__main__":
     hits = pd.DataFrame(columns=['plate', 'year', 'make', 'model'])
 
