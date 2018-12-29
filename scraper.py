@@ -1,15 +1,18 @@
-# scrapes findbyplate.com
+# scrapes findbyplate.com for ny plates and partials
 
 from requests import get
 from requests.exceptions import RequestException
 from contextlib import closing
 from bs4 import BeautifulSoup
 import pandas as pd
-import requests as r
-import json
-from pandas.io.json import json_normalize
 import time
 import csv
+
+rateLimit = 5
+queries = 0
+initials = 'ABCDEFGHJ'
+letters = 'ABCDEFGHJKLMNPRSTUVWXYZ' # no i, o, q
+numbers = range(10)
 
 def simple_get(url):
     """
@@ -49,16 +52,22 @@ def log_error(e):
     
 def parseVehicle(vehicle):
     v = vehicle.split(' ')
-    #print(v)
     
-    #vehicleInfo = {'plate': [plate], 'make': make, 'color': color, 'year': year,
     return v
 
 def getVehicle(plate):
     url = 'https://findbyplate.com/US/NY/' + plate + '/'
     response = simple_get(url)
     vehicle = ['0000', 'Make', 'Model']
-    vehInfo = []
+    vehInfo = []   
+    global queries
+    global rateLimit
+    
+    if queries < rateLimit:
+        queries += 1
+    else:
+        time.sleep(3)
+        queries = 0
 
     if response is not None:
         html = BeautifulSoup(response, 'html.parser')
@@ -82,6 +91,29 @@ def getVehicle(plate):
             vehicle[i] = vehInfo[i]
             
     return vehicle
+
+def aggregateDf(vehicle, plate):
+    v = {'plate': [plate], 'year': vehicle[0], 'make': vehicle[1], 'model': vehicle[2]}
+    aggregate = pd.DataFrame(data=v)   
+    print(aggregate)
+    return aggregate
+
+def listToQuery(pList, showDNE = False):
+    queries = pd.DataFrame(columns=['plate', 'year', 'make', 'model'])
+    
+    for p in pList:
+        print("plate: " + p)
+        df = aggregateDf(getVehicle(p), p)
+        if df['year'][0] == "0000" and showDNE == False:
+            continue
+        else:
+            queries = pd.concat([queries, df], ignore_index = True)
+            
+            try:
+                queries.to_csv('tmp.csv')
+            except PermissionError:
+                print("Permission error while writing to tmp.csv. Is the file open?")
+    return queries
 
 def getPartialsList(license): # where license is a list
     # https://en.wikipedia.org/wiki/Vehicle_registration_plates_of_New_York
@@ -134,8 +166,43 @@ def getPartialsList(license): # where license is a list
     print(plateList)
     return plateList
 
+'''
 if __name__ == "__main__":
     car = getVehicle('GCL8673')
     print(car)
     car = getVehicle('MCS8775')
     print(car)
+'''
+    
+if __name__ == "__main__":
+    hits = pd.DataFrame(columns=['plate', 'year', 'make', 'model'])
+
+    s = input("Enter NYS plate numbers, separated by commas. Use * for unknowns:" ) # hx*459*,hxm4595,hvc2922, HAU8673
+    
+    plates = s.replace(' ', '')
+    plates = plates.split(',')
+    
+    for p in plates:
+        if p.count('*') == 0:
+            hits = pd.concat([hits, aggregateDf(getVehicle(p), p)], ignore_index=True)
+        elif p.count('*') > 0 and p.count('*') <= 4: # dont try plates with more than 4 missing characters, waste of time
+            plateList = getPartialsList(plates)
+            try:
+                csvfile = "querylist.csv"
+                with open(csvfile, "w") as output:
+                    writer = csv.writer(output, lineterminator='\n')
+                    for p in plateList:
+                        writer.writerow([p]) 
+            except PermissionError:
+                print("Permission error while writing to querylist.csv. Is the file open?")
+            finally:
+                #hits = pd.concat([hits, listToQuery(plateList, True)], ignore_index=True)
+                hits = pd.concat([hits, listToQuery(plateList)], ignore_index=True)
+        else:
+            print(p + " is missing too many characters!")
+        print(hits)
+    try:
+        hits.to_csv('plates.csv')
+    except PermissionError:
+        print("Permission error while writing to plates.csv. Is the file open?")
+    print("Search completed! Results in plates.csv.")
