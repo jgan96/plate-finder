@@ -1,5 +1,7 @@
 def query(license):
-    parameters = {"RegistrationNumber": license, "state": "NY", "username": "bird.brains.jason"}
+    u = input("enter username: ")
+    
+    parameters = {"RegistrationNumber": license, "state": "NY", "username": u}
         
     response = r.get("http://regcheck.org.uk/api/reg.asmx/CheckUSA", params=parameters)
     data = response.json()
