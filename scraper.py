@@ -26,6 +26,7 @@ def simple_get(url):
             if is_good_response(resp):
                 return resp.content
             else:
+                log_error(resp.status_code)
                 return None
 
     except RequestException as e:
@@ -84,7 +85,8 @@ def getVehicle(plate):
 
     # Raise an exception if we failed to get any data from the url
     else:
-        raise Exception('Error retrieving contents at {}'.format(url))
+        log_error('Error retrieving contents at {}'.format(url))
+        vehInfo = ['9999', 'Failed To Retrieve' 'See log']
     
     # make sure we haven't parsed more than the year, make, and model of the vehicle    
     #finally:
@@ -179,7 +181,7 @@ if __name__ == "__main__":
     for p in plates:
         if p.count('*') == 0:
             hits = pd.concat([hits, aggregateDf(getVehicle(p), p)], ignore_index=True)
-        elif p.count('*') > 0 and p.count('*') <= 4: # dont try plates with more than 4 missing characters, waste of time
+        elif len(p) == 7 and p.count('*') > 0 and p.count('*') <= 4: # dont try plates with more than 4 missing characters, waste of time
             plateList = getPartialsList(plates)
             try:
                 csvfile = "querylist.csv"
@@ -193,7 +195,7 @@ if __name__ == "__main__":
                 #hits = pd.concat([hits, listToQuery(plateList, True)], ignore_index=True)
                 hits = pd.concat([hits, listToQuery(plateList)], ignore_index=True)
         else:
-            print(p + " is missing too many characters!")
+            print(p + " is missing too many characters or of the incorrect length!")
         print(hits)
     try:
         hits.to_csv('plates.csv')
