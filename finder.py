@@ -8,10 +8,11 @@ import requests as r
 import json
 from pandas.io.json import json_normalize
 import time
+import csv
 
-rateLimit = 26
+rateLimit = 1000
 queries = 0
-initials = 'GHJ'
+initials = 'ABCDEFGHJ'
 letters = 'ABCDEFGHJKLMNPRSTUVWXYZ' # no i, o, q
 numbers = range(10)
 
@@ -85,63 +86,98 @@ def query(license):
     #print(data)
     return parseVehicle(data)
 
-def partials(license, df):
+def listToQuery(pList, showDNE = False):
+    queries = pd.DataFrame(columns=['plate', 'make', 'color', 'year', 'total violations', 'brooklyn', 'bronx', 'queens', 'staten island', 'manhattan', 'unknown'])
+    
+    for p in pList:
+        print("plate: " + p)
+        df = query(p)
+        if df['make'][0] == "Plate not found!" and showDNE == False:
+            continue
+        else:
+            queries = pd.concat([queries, df], ignore_index = True)
+            
+            try:
+                queries.to_csv('tmp.csv')
+            except PermissionError:
+                print("Permission error while writing to tmp.csv. Is the file open?")
+    return queries
+
+def getPartialsList(license): # where license is a list
     # https://en.wikipedia.org/wiki/Vehicle_registration_plates_of_New_York
     # first character can be F, H, J
     # second and third character can be A-Z (but not I, O, Q?)
     # last four characters can be 0-9
     
     # recursively iterate through possible matches, ie
-    # partials(H*C2**2)
-    # partials(HAC2**2)
-    # partials(HAC20*2)
-    # partials(HAC2002)
-    # return query(HAC2002)
-    if license[0] == '*':
-        df = pd.concat([df, partials('F' + license[1:], df)], ignore_index=True)
-        df = pd.concat([df, partials('H' + license[1:], df)], ignore_index=True)
-        df = pd.concat([df, partials('J' + license[1:], df)], ignore_index=True)
-    elif license[1] == '*' or license[2] == '*':
-        pos = license.find('*')
-        for i in range(ord('a'), ord('z')+1):
-            # A-Z but not I, O, Q
-            if ord('i') == i or ord('o') == i or ord('q') == i:
-                continue
-            else:
-                df = pd.concat([df, partials(license[0:pos] + chr(i) + license[pos + 1:], df)], ignore_index=True)
-    elif license[3] == '*' or license[4] == '*' or license[5] == '*' or license[6] == '*':
-        pos = license.find('*')
-        for i in range(0, 10):
-            # 0-9
-            df = pd.concat([df, partials(license[0:pos] + str(i) + license[pos + 1:], df)], ignore_index=True)
-    else:
-        print(license)
-        return query(license)
+    # getPartialsList(H*C2**2)
+    # getPartialsList([HAC2**2, HBC2**2, ..., HZC2**2])
+    # getPartialsList([HAC20*2, HAC21*2, ..., HZC29*2])
+    # getPartialsList([HAC2002, HAC2012, ..., HZC2992])
+    # return [HAC2002, HAC2012, ..., HZC2992]
     
-    try:
-        df.to_csv('tmp.csv')
-    except PermissionError:
-        print("Permission error while writing to tmp.csv. Is the file open?")
-    finally:
-        return df
+    global initials
+    global letters
+    global numbers
+    plateList = []
+
+    '''
+    plates = ["G%sS-8%s%s5" % (l, n1, n2) 
+     for n1 in numbers 
+     for n2 in numbers
+     for l in letters]
+    '''
+
+    for p in license:
+        if p[0] == '*':
+            #print("initials")
+            #plateList.append()
+            for i in initials:
+                plateList.append(i + p[1:])
+                #print(plateList)
+            #print("end initials")
+            plateList = getPartialsList(plateList)
+            #list = ["%s" + p[1:] % (i) for i in initials]      
+            #partials(["%s" + p[1:] % (i) for i in initials])
+        elif p[1] == '*' or p[2] == '*':
+            pos = p.find('*')
+            for l in letters:
+                plateList.append(p[0:pos] + l + p[pos + 1:])
+            plateList = getPartialsList(plateList)
+        elif p[3] == '*' or p[4] == '*' or p[5] == '*' or p[6] == '*':
+            pos = p.find('*')
+            for n in numbers:
+                plateList.append(p[0:pos] + str(n) + p[pos + 1:])
+            plateList = getPartialsList(plateList)
+        else:
+            plateList.append(p)
+    print(plateList)
+    return plateList
 
 if __name__ == "__main__":
     hits = pd.DataFrame(columns=['plate', 'make', 'color', 'year', 'total violations', 'brooklyn', 'bronx', 'queens', 'staten island', 'manhattan', 'unknown'])
-    
+
     s = input("Enter NYS plate numbers, separated by commas. Use * for unknowns:" ) # hx*459*,hxm4595,hvc2922, HAU8673
     
     plates = s.replace(' ', '')
     plates = plates.split(',')
     
-    print(plates)
-    
-    # dont try plates with more than 4 missing characters, waste of time
-    
     for p in plates:
         if p.count('*') == 0:
             hits = pd.concat([hits, query(p)], ignore_index=True)
-        elif p.count('*') > 0 and p.count('*') <= 4:
-            hits = pd.concat([hits, partials(p, hits)], ignore_index=True)
+        elif p.count('*') > 0 and p.count('*') <= 4: # dont try plates with more than 4 missing characters, waste of time
+            plateList = getPartialsList(plates)
+            try:
+                csvfile = "querylist.csv"
+                with open(csvfile, "w") as output:
+                    writer = csv.writer(output, lineterminator='\n')
+                    for p in plateList:
+                        writer.writerow([p]) 
+            except PermissionError:
+                print("Permission error while writing to querylist.csv. Is the file open?")
+            finally:
+                #hits = pd.concat([hits, listToQuery(plateList, True)], ignore_index=True)
+                hits = pd.concat([hits, listToQuery(plateList)], ignore_index=True)
         else:
             print(p + " is missing too many characters!")
         print(hits)
@@ -150,3 +186,5 @@ if __name__ == "__main__":
     except PermissionError:
         print("Permission error while writing to vehicles.csv. Is the file open?")
     print("Search completed! Results in vehicles.csv.")
+
+    
